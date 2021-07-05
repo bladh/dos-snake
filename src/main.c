@@ -10,6 +10,11 @@
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 200
 
+#define DIR_R 0
+#define DIR_L 1
+#define DIR_U 2
+#define DIR_D 3
+
 struct position {
     int x;
     int y;
@@ -48,6 +53,18 @@ int collision_points(struct position pos1, struct position pos2) {
     return (pos1.x == pos2.x && pos1.y == pos2.y);
 }
 
+void move_snake(int direction) {
+    if (direction == DIR_U) {
+        snake[0].y--;
+    } else if (direction == DIR_D) {
+	snake[0].y++;
+    } else if (direction == DIR_R) {
+	snake[0].x++;
+    } else if (direction == DIR_L) {
+	snake[0].x--;
+    }
+}
+
 struct position get_random_position() {
     struct position newpos;
     do {
@@ -64,6 +81,7 @@ int main(int argc, const char **argv) {
         return 1;
     }
     srand(time(NULL));
+    int autoplay = 0;
 
     for(int i = 0; i<MAXSNAKE;i++){
         snake[i].x = -1;
@@ -100,10 +118,21 @@ int main(int argc, const char **argv) {
     candy.x = 6;
     candy.y = 3;
 
+    int direction = DIR_R;
+
     while(playing) {
         while(counter > 0) {        
             if (key[KEY_ESC]) {
                 playing = 0;
+            }
+	    if (key[KEY_UP] && direction != DIR_D) {
+                direction = DIR_U;
+	    } else if (key[KEY_DOWN] && direction != DIR_U) {
+		direction = DIR_D;
+            } else if (key[KEY_RIGHT] && direction != DIR_L) {
+		direction = DIR_R;
+	    } else if (key[KEY_LEFT] && direction != DIR_R) {
+		direction = DIR_L;
             }
             
             // move tail
@@ -112,6 +141,7 @@ int main(int argc, const char **argv) {
             }
 
             // autoplay
+	    if (autoplay) {
 	    if (candy.x > snake[0].x) {
                snake[0].x++;
 	    }
@@ -124,6 +154,9 @@ int main(int argc, const char **argv) {
 	    else if (candy.y < snake[0].y) {
                snake[0].y--;
 	    }
+	    } else {
+                move_snake(direction);
+            }
             
             // wraparound
             if (snake[0].x >= TILES) {
