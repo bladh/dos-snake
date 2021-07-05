@@ -1,0 +1,6 @@
+dist/*
+!dist/readme.md
+vendor/*
+!vendor/readme.md
+
+*.o
