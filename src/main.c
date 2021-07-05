@@ -103,9 +103,25 @@ int main(int argc, const char **argv) {
             if (key[KEY_ESC]) {
                 playing = 0;
             }
+            
+            // move tail
+            for(int i = score; i > 0; i--) {
+                snake[i] = snake[i-1];
+            }
 
-            // head movement
-            snake[0].x++;
+            // autoplay
+	    if (candy.x > snake[0].x) {
+               snake[0].x++;
+	    }
+	    else if (candy.x < snake[0].x) {
+               snake[0].x--;
+	    }
+	    else if (candy.y > snake[0].y) {
+               snake[0].y++;
+	    }
+	    else if (candy.y < snake[0].y) {
+               snake[0].y--;
+	    }
             
             // wraparound
             if (snake[0].x >= TILES) {
@@ -126,17 +142,18 @@ int main(int argc, const char **argv) {
                 candy = get_random_position();
                 score++;
             }
-            
-            // move tail
-            for(int i = score; i > 0; i--) {
-                snake[i] = snake[i-1];
-            }
             counter--;
         }
 
         vsync();
         clear_to_color(screen, BACKGROUND);    
         textout_ex(screen, font, "SNAKE FOR DOS", SIDEBOARD, PLAYING_BOARD_OFFSET, BLACK, -1);
+
+        textout_ex(screen, font, "HEAD POS", SIDEBOARD, 40, BLACK, -1);
+	textprintf_ex(screen, font, SIDEBOARD, 60, BLACK, -1, "X: %d Y: %d", snake[0].x, snake[0].y);
+        textout_ex(screen, font, "CANDY POS", SIDEBOARD, 80, BLACK, -1);
+	textprintf_ex(screen, font, SIDEBOARD, 100, BLACK, -1, "X: %d Y: %d", candy.x, candy.y);
+
         rect(screen, PLAYING_BOARD_OFFSET-1, PLAYING_BOARD_OFFSET-1, PLAYING_BOARD_OFFSET+TILES*TILE_SIZE, PLAYING_BOARD_OFFSET+TILES*TILE_SIZE, BLACK);
         for(int i = score; i > 0; i--) {
             draw_pos(snake[i], BLACK);
