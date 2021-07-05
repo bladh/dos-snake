@@ -120,12 +120,11 @@ int main(int argc, const char **argv) {
     candy.y = 8;
 
     int direction = DIR_R;
+    int dead = 0;
+    int snakecol = BLACK;
 
     while(playing) {
-        while(counter > 0) {        
-            if (key[KEY_ESC]) {
-                playing = 0;
-            }
+        while(counter > 0 && dead == 0) {        
 	    if (key[KEY_UP] && direction != DIR_D) {
                 direction = DIR_U;
 	    } else if (key[KEY_DOWN] && direction != DIR_U) {
@@ -135,12 +134,19 @@ int main(int argc, const char **argv) {
 	    } else if (key[KEY_LEFT] && direction != DIR_R) {
 		direction = DIR_L;
             }
-            
+
             // move tail
             for(int i = score; i > 0; i--) {
                 snake[i] = snake[i-1];
             }
-
+            
+	    // eat candy and grow
+            if(collision_points(snake[0], candy)) {
+                candy = get_random_position();
+                score++;
+		snake[score] = snake[score-1];
+            }
+            
             // autoplay
 	    if (autoplay) {
                if (candy.x > snake[0].x) {
@@ -169,24 +175,30 @@ int main(int argc, const char **argv) {
             if (snake[0].y < 0) {
                 snake[0].y = TILES-1;
             }
-            
-            // eat candy and grow
-            if(collision_points(snake[0], candy)) {
-                candy = get_random_position();
-                score++;
-		snake[score] = snake[score-1];
+
+	    // check death
+	    for(int i = score; i > 0; i--) {
+                if (snake[i].x == snake[0].x && snake[i].y == snake[0].y) {
+                    dead = 1;
+		    snakecol = RED;
+                }
             }
             counter--;
         }
-
+        if (key[KEY_ESC]) {
+            playing = 0;
+        }
         clear_to_color(buffer, BACKGROUND);
         textout_ex(buffer, font, "SNAKE FOR DOS", SIDEBOARD, PLAYING_BOARD_OFFSET, BLACK, -1);
 
 	textprintf_ex(buffer, font, SIDEBOARD, 60, BLACK, -1, "SCORE: %d", score);
 
+	if (dead == 1)
+           textout_ex(buffer, font, "GAME OVER", SIDEBOARD, 30, RED, -1);
+
         rect(buffer, PLAYING_BOARD_OFFSET-1, PLAYING_BOARD_OFFSET-1, PLAYING_BOARD_OFFSET+TILES*TILE_SIZE, PLAYING_BOARD_OFFSET+TILES*TILE_SIZE, BLACK);
         for(int i = score; i >= 0; i--) {
-            draw_pos(snake[i], BLACK);
+            draw_pos(snake[i], snakecol);
         }
         draw_pos(candy, BLACK);
 	vsync();
