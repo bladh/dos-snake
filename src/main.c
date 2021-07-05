@@ -93,7 +93,7 @@ int main(int argc, const char **argv) {
     
     LOCK_VARIABLE(counter);
     LOCK_VARIABLE(Increment);
-    install_int_ex(Increment, BPS_TO_TIMER(15));
+    install_int_ex(Increment, BPS_TO_TIMER(16));
 
     if (set_gfx_mode(GFX_AUTODETECT, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0) != 0) {
         set_gfx_mode(GFX_TEXT, 0, 0, 0, 0);
@@ -105,6 +105,7 @@ int main(int argc, const char **argv) {
     set_palette(desktop_palette);
     int BLACK = makecol(0,0,0);
     int BACKGROUND = makecol(255,255,255);
+    int RED = makecol(255,0,0);
     int playing = 1;
 
     // set up drawing buffer
@@ -115,8 +116,8 @@ int main(int argc, const char **argv) {
     snake[0].y = 3;
     
     struct position candy;
-    candy.x = 6;
-    candy.y = 3;
+    candy.x = 4;
+    candy.y = 8;
 
     int direction = DIR_R;
 
@@ -142,18 +143,15 @@ int main(int argc, const char **argv) {
 
             // autoplay
 	    if (autoplay) {
-	    if (candy.x > snake[0].x) {
-               snake[0].x++;
-	    }
-	    else if (candy.x < snake[0].x) {
-               snake[0].x--;
-	    }
-	    else if (candy.y > snake[0].y) {
-               snake[0].y++;
-	    }
-	    else if (candy.y < snake[0].y) {
-               snake[0].y--;
-	    }
+               if (candy.x > snake[0].x) {
+                  snake[0].x++;
+               } else if (candy.x < snake[0].x) {
+                  snake[0].x--;
+               } else if (candy.y > snake[0].y) {
+                  snake[0].y++;
+               } else if (candy.y < snake[0].y) {
+                  snake[0].y--;
+               }
 	    } else {
                 move_snake(direction);
             }
@@ -184,13 +182,10 @@ int main(int argc, const char **argv) {
         clear_to_color(buffer, BACKGROUND);
         textout_ex(buffer, font, "SNAKE FOR DOS", SIDEBOARD, PLAYING_BOARD_OFFSET, BLACK, -1);
 
-        textout_ex(buffer, font, "HEAD POS", SIDEBOARD, 40, BLACK, -1);
-	textprintf_ex(buffer, font, SIDEBOARD, 60, BLACK, -1, "X: %d Y: %d", snake[0].x, snake[0].y);
-        textout_ex(buffer, font, "CANDY POS", SIDEBOARD, 80, BLACK, -1);
-	textprintf_ex(buffer, font, SIDEBOARD, 100, BLACK, -1, "X: %d Y: %d", candy.x, candy.y);
+	textprintf_ex(buffer, font, SIDEBOARD, 60, BLACK, -1, "SCORE: %d", score);
 
         rect(buffer, PLAYING_BOARD_OFFSET-1, PLAYING_BOARD_OFFSET-1, PLAYING_BOARD_OFFSET+TILES*TILE_SIZE, PLAYING_BOARD_OFFSET+TILES*TILE_SIZE, BLACK);
-        for(int i = score; i > 0; i--) {
+        for(int i = score; i >= 0; i--) {
             draw_pos(snake[i], BLACK);
         }
         draw_pos(candy, BLACK);
