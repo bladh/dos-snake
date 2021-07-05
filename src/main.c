@@ -1,17 +1,15 @@
 #include <allegro.h>
 #include <stdio.h>
 
-/*
- * TODO: Some bug with the tail.
- * useful links
- * double buffering:
- * https://cboard.cprogramming.com/cplusplus-programming/24721-double-buffering-allegro.html
- */
 #define PLAYING_BOARD_OFFSET 6
 #define TILES 32
 #define TILE_SIZE 6
 #define MAXSNAKE TILES*TILES
 #define SIDEBOARD PLAYING_BOARD_OFFSET*2+(TILES*TILE_SIZE)
+
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 200
+
 struct position {
     int x;
     int y;
@@ -21,12 +19,14 @@ volatile long counter = 0;
 struct position snake[MAXSNAKE];
 int score = 0;
 
+BITMAP *buffer;
+
 void Increment() {
     counter++;
 }
 
 void draw_square(int x, int y, int color) {
-    rectfill(screen, PLAYING_BOARD_OFFSET + (x*TILE_SIZE), PLAYING_BOARD_OFFSET + (y*TILE_SIZE),
+    rectfill(buffer, PLAYING_BOARD_OFFSET + (x*TILE_SIZE), PLAYING_BOARD_OFFSET + (y*TILE_SIZE),
         PLAYING_BOARD_OFFSET + (x*TILE_SIZE)+TILE_SIZE, PLAYING_BOARD_OFFSET + (y*TILE_SIZE)+TILE_SIZE,
         color);
 }
@@ -77,8 +77,7 @@ int main(int argc, const char **argv) {
     LOCK_VARIABLE(Increment);
     install_int_ex(Increment, BPS_TO_TIMER(15));
 
-    // Switch to graphics mode, 320x200.
-    if (set_gfx_mode(GFX_AUTODETECT, 320, 200, 0, 0) != 0) {
+    if (set_gfx_mode(GFX_AUTODETECT, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0) != 0) {
         set_gfx_mode(GFX_TEXT, 0, 0, 0, 0);
         allegro_message("Cannot set graphics mode:\r\n%s\r\n", allegro_error);
         return 1;
@@ -89,7 +88,10 @@ int main(int argc, const char **argv) {
     int BLACK = makecol(0,0,0);
     int BACKGROUND = makecol(255,255,255);
     int playing = 1;
-    
+
+    // set up drawing buffer
+    buffer = create_bitmap(SCREEN_WIDTH, SCREEN_HEIGHT);
+
     // set up snake
     snake[0].x = 3;
     snake[0].y = 3;
@@ -141,26 +143,29 @@ int main(int argc, const char **argv) {
             if(collision_points(snake[0], candy)) {
                 candy = get_random_position();
                 score++;
+		snake[score] = snake[score-1];
             }
             counter--;
         }
 
-        vsync();
-        clear_to_color(screen, BACKGROUND);    
-        textout_ex(screen, font, "SNAKE FOR DOS", SIDEBOARD, PLAYING_BOARD_OFFSET, BLACK, -1);
+        clear_to_color(buffer, BACKGROUND);
+        textout_ex(buffer, font, "SNAKE FOR DOS", SIDEBOARD, PLAYING_BOARD_OFFSET, BLACK, -1);
 
-        textout_ex(screen, font, "HEAD POS", SIDEBOARD, 40, BLACK, -1);
-	textprintf_ex(screen, font, SIDEBOARD, 60, BLACK, -1, "X: %d Y: %d", snake[0].x, snake[0].y);
-        textout_ex(screen, font, "CANDY POS", SIDEBOARD, 80, BLACK, -1);
-	textprintf_ex(screen, font, SIDEBOARD, 100, BLACK, -1, "X: %d Y: %d", candy.x, candy.y);
+        textout_ex(buffer, font, "HEAD POS", SIDEBOARD, 40, BLACK, -1);
+	textprintf_ex(buffer, font, SIDEBOARD, 60, BLACK, -1, "X: %d Y: %d", snake[0].x, snake[0].y);
+        textout_ex(buffer, font, "CANDY POS", SIDEBOARD, 80, BLACK, -1);
+	textprintf_ex(buffer, font, SIDEBOARD, 100, BLACK, -1, "X: %d Y: %d", candy.x, candy.y);
 
-        rect(screen, PLAYING_BOARD_OFFSET-1, PLAYING_BOARD_OFFSET-1, PLAYING_BOARD_OFFSET+TILES*TILE_SIZE, PLAYING_BOARD_OFFSET+TILES*TILE_SIZE, BLACK);
+        rect(buffer, PLAYING_BOARD_OFFSET-1, PLAYING_BOARD_OFFSET-1, PLAYING_BOARD_OFFSET+TILES*TILE_SIZE, PLAYING_BOARD_OFFSET+TILES*TILE_SIZE, BLACK);
         for(int i = score; i > 0; i--) {
             draw_pos(snake[i], BLACK);
         }
         draw_pos(candy, BLACK);
+	vsync();
+	blit(buffer, screen, 0, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     }
 
+    destroy_bitmap(buffer);
     return 0;
 }
 END_OF_MAIN()
