@@ -106,7 +106,10 @@ int main(int argc, const char **argv) {
     int BLACK = makecol(0,0,0);
     int BACKGROUND = makecol(255,255,255);
     int RED = makecol(255,0,0);
+    int GREY = makecol(125,125,125);
     int playing = 1;
+    int paused = 0;
+    int pausePressed = 0;
 
     // set up drawing buffer
     buffer = create_bitmap(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -114,7 +117,7 @@ int main(int argc, const char **argv) {
     // set up snake
     snake[0].x = 3;
     snake[0].y = 3;
-    
+
     struct position candy;
     candy.x = 4;
     candy.y = 8;
@@ -124,8 +127,8 @@ int main(int argc, const char **argv) {
     int snakecol = BLACK;
 
     while(playing) {
-        while(counter > 0 && dead == 0) {        
-	    if (key[KEY_UP] && direction != DIR_D) {
+        while(counter > 0 && dead == 0 && paused == 0) {
+           if (key[KEY_UP] && direction != DIR_D) {
                 direction = DIR_U;
 	    } else if (key[KEY_DOWN] && direction != DIR_U) {
 		direction = DIR_D;
@@ -134,19 +137,29 @@ int main(int argc, const char **argv) {
 	    } else if (key[KEY_LEFT] && direction != DIR_R) {
 		direction = DIR_L;
             }
+            if (key[KEY_SPACE]) {
+               if (pausePressed == 0) {
+                  paused = 1;
+                  pausePressed == 1;
+                  snakecol = GREY;
+                  goto drawing;
+               }
+            } else {
+               pausePressed = 0;
+            }
 
             // move tail
             for(int i = score; i > 0; i--) {
                 snake[i] = snake[i-1];
             }
-            
+
 	    // eat candy and grow
             if(collision_points(snake[0], candy)) {
                 candy = get_random_position();
                 score++;
 		snake[score] = snake[score-1];
             }
-            
+
             // autoplay
 	    if (autoplay) {
                if (candy.x > snake[0].x) {
@@ -161,7 +174,7 @@ int main(int argc, const char **argv) {
 	    } else {
                 move_snake(direction);
             }
-            
+
             // wraparound
             if (snake[0].x >= TILES) {
                 snake[0].x = 0;
@@ -185,6 +198,17 @@ int main(int argc, const char **argv) {
             }
             counter--;
         }
+	if (key[KEY_SPACE]) {
+     if (pausePressed == 0) {
+        paused = 0;
+        counter = 0;
+        snakecol = BLACK;
+        pausePressed = 1;
+     }
+  } else {
+      pausePressed = 0;
+  }
+drawing:
         if (key[KEY_ESC]) {
             playing = 0;
         }
