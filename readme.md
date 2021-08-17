@@ -1,5 +1,7 @@
 # DOS Snake
 
+![alt text](screenshot.png "Screenshot")
+
 Title explains it all.
 
 ## Build
